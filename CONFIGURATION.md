@@ -27,6 +27,8 @@ The default render method will handle both full page renders as well as renderin
 
 - If you set `res.focus`, the browser's focus will be set to that element after the page is rendered. If you do not set `res.focus`, then the browser's focus will be set to the first non-inert element in the DOM with the `autofocus` attribute, or, if none are present, it will be set to whatever the target element was set to for the DOM update. If there are multiple targets, the first target on the list will be what is selected.
 
+- If you set `res.skipViewTransition`, the DOM update will not be wrapped in a `document.startViewTransition()` call, which is useful in improving performance if you're not doing an animation.
+
 - There are also hooks for setting animations as well. See "Hooks for setting animations" below.
 
 If this DOM manipulation behavior is undesirable to you, you can supply your own render method instead and do whatever you like. To supply your own render method, see the constructor parameter documentation below.
@@ -42,7 +44,8 @@ If this DOM manipulation behavior is undesirable to you, you can supply your own
 - `disableTopbar` *[Boolean]*: Disable the [top bar](https://buunguyen.github.io/topbar/) loading bar. Default: `false` (the loading bar is enabled by default)
 - `topbarConfig` *[Object]*: Options to supply to [top bar](https://buunguyen.github.io/topbar/) to customize its aesthetics and behavior. See the site's documentation for a list of options.
 - `topBarRoutes` *[Array of Strings]*: Which routes to use [top bar](https://buunguyen.github.io/topbar/) on. Defaults to all if this option is not supplied.
-- `alwaysScrollTop` *[Boolean]*: Always scroll to the top of the page after every render. Default: `false` (the default render method will remember the scroll position of each page visited and restore that scroll position when you revisit those pages)
+- `alwaysSkipViewTransition` *[Boolean]*: When set to true, if using the default render method, the DOM update will not be wrapped in a `document.startViewTransition()` call, which is useful in improving performance if you're not doing an animation. Default: `false`.
+- `alwaysScrollTop` *[Boolean]*: Always scroll to the top of the page after every render instead of remembering the scroll position of each page visited and restoring that scroll position when you revisit those pages. Default: `false`.
 
 #### Customizing the default render method's behavior
 
@@ -81,6 +84,7 @@ When you call the constructor, it will return an `app` object.
 
 - `afterEveryRender(params)` *[Function]*: Function to execute after every template render sourced from the constructor params.
 - `alwaysScrollTop` *[Boolean]*: If true, the app will not remember scroll position on a per-page basis.
+- `alwaysSkipViewTransition` *[Boolean]*: When set to true, if using the default render method, the DOM update will not be wrapped in a `document.startViewTransition()` call.
 - `appVars` *[Object]*: List of variables stored via `app.set()` and retrieved with `app.get()`.
 - `beforeEveryRender(params)` *[Function]*: Function to execute before every template render sourced from the constructor params.
 - `defaultTarget` *[String]*: Query string representing the default element to target if one is not supplied by `res.target`.
@@ -224,6 +228,7 @@ Likewise all other `req` methods [from the Node.js API](https://nodejs.org/api/h
 - `res.removeScriptTags` *[Boolean]*: If using the default render method, this will remove any `<script>` tags from the page before doing the DOM update.
 - `res.removeStyleTags` *[Boolean]*: If using the default render method, this will remove any `<style>` tags from the page before doing the DOM update.
 - `res.removeTemplateTags` *[Boolean]*: If using the default render method, this will remove any `<template>` tags from the page before doing the DOM update.
+- `res.skipViewTransition` *[Boolean]*: If using the default render method, this will prevent DOM updates from being wrapped in `document.startViewTransition()` calls.
 - `res.target` *[String or Array of Strings]*: If using the default render method, use this variable to set a query selector or array of query selectors to determine which DOM node contents will be replaced by your template render's contents. If none is supplied, and neither `app.defaultTarget` nor `app.defaultTargets` is set, then the contents of the `<body>` tag will be replaced with the output of your rendered template.
 - `res.title` *[String]*: If using the default render method, use this variable to set a page title for the new render.
 - `res.updateDelay` *[Number]*: If using the default render method, use this variable to set a delay in milliseconds before the render occurs. If not using the default render method, this property will still allow you to specify a delay before resetting the scroll position.
