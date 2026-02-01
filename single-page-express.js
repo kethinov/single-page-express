@@ -33,6 +33,7 @@ function singlePageExpress (options) {
       }
     })
   }
+  app.alwaysSkipViewTransition = options.alwaysSkipViewTransition // never wrap dom updates in document.startViewTransition() calls
   app.alwaysScrollTop = options.alwaysScrollTop // always scroll to the top of the page after every render
   app.urls = {} // list of URLs that have been visited and metadata about them
   let currentViewTransition // a global reference to the current view transition so we can know when it has ended
@@ -84,10 +85,24 @@ function singlePageExpress (options) {
   app.mount = () => {} // stubbed out
 
   // registers a route and handles middleware
-  function routeHandler (method, middleware, route, callback) {
-    let callbackWithMiddlewareExecutingFirst = middleware
-    if (callback) callbackWithMiddlewareExecutingFirst = (req, res) => middleware(req, res, () => callback(req, res))
-    registerRoute(method, route, callbackWithMiddlewareExecutingFirst)
+  function routeHandler (arg1, arg2, arg3, arg4) {
+    const method = arg1
+    const middleware = arg2
+    let route
+    let callback
+    if (arg4) {
+      route = arg3
+      callback = (req, res) => middleware(req, res, () => arg4(req, res))
+    } else {
+      if (typeof arg2 !== 'string' && typeof arg2 === 'function') {
+        route = arg3
+        callback = arg2
+      } else {
+        route = arg2
+        callback = arg3
+      }
+    }
+    registerRoute(method, route, callback)
   }
 
   // express app object methods
@@ -99,7 +114,7 @@ function singlePageExpress (options) {
   app.enabled = (name) => { return !!app.appVars[name] }
   app.engine = () => {} // stubbed out
   app.get = (middleware, name, callback) => { // in the express docs, this method is overloaded and can be used for more than one thing based on the number of arguments
-    if (!callback) return app.appVars[name]
+    if (!name && !callback) return app.appVars[middleware]
     else return routeHandler('get', middleware, name, callback)
   }
   app.listen = () => {} // stubbed out
@@ -267,12 +282,6 @@ function singlePageExpress (options) {
     if (method === 'all') {
       httpVerbs.forEach((middleware, method) => { routeHandler(method, middleware, route, callback) })
       return
-    }
-
-    // if the function receives one argument, then route is the callback, and the actual route needs to be defined from `this`
-    if (typeof route !== 'string' && typeof route === 'function') {
-      callback = route
-      route = this.route
     }
 
     // flatten if case insensitivity is enabled
@@ -490,6 +499,7 @@ function singlePageExpress (options) {
     const thisRemoveBaseTags = this.removeBaseTags
     const thisRemoveTemplateTags = this.removeTemplateTags
     const thisRemoveHeadTags = this.removeHeadTags
+    const thisSkipViewTransition = this.skipViewTransition
     const thisUpdateDelay = this.updateDelay
     const thisAfterRender = this.afterRender
     this.title = null
@@ -503,6 +513,7 @@ function singlePageExpress (options) {
     this.removeBaseTags = null
     this.removeTemplateTags = null
     this.removeHeadTags = null
+    this.skipViewTransition = null
     this.updateDelay = null
     this.afterRender = null
 
@@ -714,7 +725,7 @@ function singlePageExpress (options) {
 
                   postRenderCallbacks()
                 }
-                if (document.startViewTransition) currentViewTransition = document.startViewTransition(domUpdate)
+                if (document.startViewTransition && !thisSkipViewTransition && !app.alwaysSkipViewTransition) currentViewTransition = document.startViewTransition(domUpdate)
                 else domUpdate()
               }, parseInt(thisUpdateDelay) || parseInt(app.updateDelay) || 0)
             })

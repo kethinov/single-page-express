@@ -1,3 +1,9 @@
+## 2.0.5
+
+- Added `app.alwaysSkipViewTransition` and `res.skipViewTransition` options. When set to true, if using the default render method, the DOM update will not be wrapped in a `document.startViewTransition()` call, which is useful in improving performance if you're not doing an animation. Default: `false`.
+- Fixed a bug that caused some `app.get` calls to fail despite correctly matching the API.
+- Updated dependencies.
+
 ## 2.0.4
 
 - Fixed a bug that caused a race condition related to view transitions and afterRender methods and render callbacks.
